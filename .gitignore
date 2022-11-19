@@ -1,3 +1,4 @@
+# scheme
 *.ss~
 *.ss#*
 .#*.ss
@@ -5,3 +6,9 @@
 *.scm~
 *.scm#*
 .#*.scm
+
+# photon
+photon
+*.import.scm
+*.link
+*.o
