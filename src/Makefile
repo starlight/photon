@@ -16,7 +16,7 @@ $(NAME): $(MAIN) $(UNITS)
 # build units
 %.o: %.scm
 	@echo "Building '$@'"
-	$(CSC) -o $@ -ckJ -static -unit $* $<
+	$(CSC) -o $@ -unit $* -ckJ -static $<
 
 clean:
 	@echo "Removing build files"
