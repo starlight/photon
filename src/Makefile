@@ -2,9 +2,7 @@ NAME=photon
 CSC=csc
 VPATH=core
 MAIN=photon.scm
-UNITS=parse.o
-
-.PHONY: build clean
+UNITS=input.o parse.o
 
 # build main image
 $(NAME): $(MAIN) $(UNITS)
@@ -13,11 +11,14 @@ $(NAME): $(MAIN) $(UNITS)
 		$(wordlist 2,99,\
 		$(patsubst %.o,%,$^)),-uses $(unit)) $<
 
+parse.o: input.o
+
 # build units
 %.o: %.scm
 	@echo "Building '$@'"
 	$(CSC) -o $@ -unit $* -ckJ -static $<
 
+.PHONY: clean
 clean:
 	@echo "Removing build files"
 	rm -fv *.import.scm *.link *.o
