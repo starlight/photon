@@ -21,4 +21,4 @@ parse.o: input.o
 .PHONY: clean
 clean:
 	@echo "Removing build files"
-	rm -fv *.import.scm *.link *.o
+	rm -fv *.import.scm *.link *.o *.core

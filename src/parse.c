@@ -32,8 +32,8 @@ static C_char C_TLS li4[] C_aligned={C_lihdr(0,0,13),40,102,95,51,49,54,32,105,1
 static C_char C_TLS li5[] C_aligned={C_lihdr(0,0,20),40,112,104,111,116,111,110,46,112,97,114,115,101,35,105,116,101,109,37,41,0,0,0,0};
 static C_char C_TLS li6[] C_aligned={C_lihdr(0,0,13),40,102,95,51,52,54,32,105,110,112,117,116,41,0,0,0};
 static C_char C_TLS li7[] C_aligned={C_lihdr(0,0,36),40,112,104,111,116,111,110,46,112,97,114,115,101,35,98,105,110,100,37,32,112,97,114,115,101,114,32,102,117,110,99,116,105,111,110,41,0,0,0,0};
-static C_char C_TLS li8[] C_aligned={C_lihdr(0,0,13),40,97,52,48,57,32,118,97,108,117,101,49,41,0,0,0};
-static C_char C_TLS li9[] C_aligned={C_lihdr(0,0,13),40,97,51,57,48,32,118,97,108,117,101,48,41,0,0,0};
+static C_char C_TLS li8[] C_aligned={C_lihdr(0,0,12),40,97,52,48,57,32,118,97,108,117,101,41,0,0,0,0};
+static C_char C_TLS li9[] C_aligned={C_lihdr(0,0,12),40,97,51,57,48,32,118,97,108,117,101,41,0,0,0,0};
 static C_char C_TLS li10[] C_aligned={C_lihdr(0,0,36),40,112,104,111,116,111,110,46,112,97,114,115,101,35,115,101,113,42,32,112,97,114,115,101,114,32,46,32,112,97,114,115,101,114,115,41,0,0,0,0};
 static C_char C_TLS li11[] C_aligned={C_lihdr(0,0,12),40,97,52,50,57,32,118,97,108,117,101,41,0,0,0,0};
 static C_char C_TLS li12[] C_aligned={C_lihdr(0,0,35),40,112,104,111,116,111,110,46,112,97,114,115,101,35,105,115,42,32,112,114,101,100,105,99,97,116,101,32,46,32,97,114,103,115,41,0,0,0,0,0};
@@ -554,9 +554,9 @@ C_word t4;
 C_word *a;
 if(c!=3) C_bad_argc_2(c,3,t0);
 C_check_for_interrupt;
-if(C_unlikely(!C_demand(C_calculate_demand(4,c,3)))){
+if(C_unlikely(!C_demand(C_calculate_demand(3,c,3)))){
 C_save_and_reclaim((void *)f_391,c,av);}
-a=C_alloc(4);
+a=C_alloc(3);
 if(C_truep(C_i_nullp(((C_word*)t0)[2]))){
 C_trace(C_text("core/parse.scm:57: result%"));
 {C_proc tp=(C_proc)C_fast_retrieve_proc(*((C_word*)lf[2]+1));
@@ -566,7 +566,7 @@ av2[1]=t1;
 av2[2]=t2;
 tp(3,av2);}}
 else{
-t3=(*a=C_CLOSURE_TYPE|3,a[1]=(C_word)f_408,a[2]=t2,a[3]=t1,tmp=(C_word)a,a+=4,tmp);{
+t3=(*a=C_CLOSURE_TYPE|2,a[1]=(C_word)f_408,a[2]=t1,tmp=(C_word)a,a+=3,tmp);{
 C_word *av2;
 if(c >= 4) {
   av2=av;
@@ -588,10 +588,10 @@ C_word t2;
 C_word t3;
 C_word *a;
 C_check_for_interrupt;
-if(C_unlikely(!C_demand(C_calculate_demand(4,c,3)))){
+if(C_unlikely(!C_demand(C_calculate_demand(3,c,3)))){
 C_save_and_reclaim((void *)f_408,c,av);}
-a=C_alloc(4);
-t2=(*a=C_CLOSURE_TYPE|3,a[1]=(C_word)f_410,a[2]=((C_word*)t0)[2],a[3]=((C_word)li8),tmp=(C_word)a,a+=4,tmp);
+a=C_alloc(3);
+t2=(*a=C_CLOSURE_TYPE|2,a[1]=(C_word)f_410,a[2]=((C_word)li8),tmp=(C_word)a,a+=3,tmp);
 C_trace(C_text("core/parse.scm:58: bind%"));
 {C_proc tp=(C_proc)C_fast_retrieve_proc(*((C_word*)lf[7]+1));
 C_word *av2;
@@ -601,7 +601,7 @@ if(c >= 4) {
   av2=C_alloc(4);
 }
 av2[0]=*((C_word*)lf[7]+1);
-av2[1]=((C_word*)t0)[3];
+av2[1]=((C_word*)t0)[2];
 av2[2]=t1;
 av2[3]=t2;
 tp(4,av2);}}
@@ -620,7 +620,7 @@ C_check_for_interrupt;
 if(C_unlikely(!C_demand(C_calculate_demand(3,c,2)))){
 C_save_and_reclaim((void *)f_410,c,av);}
 a=C_alloc(3);
-t3=C_a_i_cons(&a,2,((C_word*)t0)[2],t2);
+t3=C_a_i_cons(&a,2,t2,t2);
 C_trace(C_text("core/parse.scm:61: result%"));
 {C_proc tp=(C_proc)C_fast_retrieve_proc(*((C_word*)lf[2]+1));
 C_word *av2=av;

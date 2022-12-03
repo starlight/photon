@@ -52,13 +52,13 @@
   (define (seq* parser . parsers)
     (bind%
       (parser)
-      (lambda (value0)
+      (lambda (value)
         (if (null? parsers)
-          (result% value0)
+          (result% value)
           (bind%
             (apply seq* parsers)
-            (lambda (value1)
-              (result% (cons value0 value1))))))))
+            (lambda (value')
+              (result% (cons value value'))))))))
 
   (define (is* predicate . args)
     (bind%

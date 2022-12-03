@@ -12,3 +12,4 @@ photon
 *.import.scm
 *.link
 *.o
+*.core
