@@ -1,14 +1,20 @@
 (module
   photon.parse
-  (result%
-    zero%
-    item%
-    bind%
-    seq*
-    is*
-    is-not*
-    eqv*
-    in*)
+  (parse:return
+    parse:zero
+    parse:null
+    parse:empty
+    parse:item
+    parse:bind
+    parse:or
+    parse:maybe
+    parse:cons
+    parse:list
+    parse:star
+    parse:plus
+    parse:is
+    parse:is-not
+    parse:in)
 
   (import
     r5rs utf8
@@ -17,69 +23,81 @@
     utf8-srfi-14
     srfi-127)
 
-  ; v -> i -> [(v . i)]
-  (define ((result% value) input)
-    (list (cons value input)))
+  ; 'identity'
+  (define ((parse:return value) input)
+    (cons value input))
 
-  ; () -> i -> #f
-  (define ((zero%) input) #f)
+  ; 'falsy' zero
+  (define ((parse:zero) input)
+    #f)
 
-  ; () -> i -> [(x . xs)] || #f
-  (define ((item%) input)
+  ; 'truthy' null
+  (define (parse:null)
+    (parse:return '()))
+
+  ; 'empty' input
+  (define ((parse:empty) input)
+    (if (null? input)
+      ((parse:null) input)
+      #f))
+
+  (define ((parse:item) input)
     (and
-      (not (null? input))
-      (list (cons (lseq-first input) (lseq-rest input)))))
+      (not ((parse:empty) input))
+      (cons (lseq-car input) (lseq-cdr input))))
 
-  (define ((bind% parser function) input)
+  (define ((parse:bind parser function) input)
     (and-let*
-      ((results (parser input))
-       (results'
-         (filter-map
-           (lambda (result)
-             ((function (lseq-first result)) (lseq-rest result)))
-           results))
-       (not (null? results')))
-      results'))
+      ((result (parser input)))
+      ((function (lseq-car result)) (lseq-cdr result))))
 
-  (define ((plus% p q) input)
-    (let*
-      ((p' (p input))
-       (q' (q input)))
-      (if (and p' q')
-        (append p' q')
-        (or p' q'))))
+  (define ((parse:or parser . parsers) input)
+    (or
+      (parser input)
+      ((apply parse:or parsers) input)))
 
-  (define (seq* parser . parsers)
-    (bind%
-      (parser)
+  (define (parse:maybe parser)
+    (parse:or parser (parse:null)))
+
+  (define (parse:cons value parser)
+    (parse:bind
+      parser
+      (lambda (value')
+        (parse:return (cons value value')))))
+
+  (define (parse:list parser . parsers)
+    (parse:bind
+      parser
       (lambda (value)
         (if (null? parsers)
-          (result% value)
-          (bind%
-            (apply seq* parsers)
-            (lambda (value')
-              (result% (cons value value'))))))))
+          (parse:return value)
+          (parse:cons value (apply parse:list parsers))))))
 
-  (define (is* predicate . args)
-    (bind%
-      (item%)
+  (define (parse:star parser)
+    (parse:maybe
+      (parse:bind
+        parser
+        (lambda (value)
+          (parse:cons value (parse:star parser))))))
+
+  (define (parse:plus parser)
+    (parse:list parser (parse:star parser)))
+
+  (define (parse:is predicate)
+    (parse:bind
+      (parse:item)
       (lambda (value)
-        (if (apply predicate value args)
-          (result% value)
-          (zero%)))))
+        (if (apply predicate value)
+          (parse:return value)
+          (parse:zero)))))
 
-  (define (is-not* predicate . args)
-    (is*
+  (define (parse:is-not predicate)
+    (parse:is
       (lambda (value)
-        (not (apply predicate value args)))))
+        (not (apply predicate value)))))
 
-  (define (eqv* const)
-    (is*
-      (lambda (value)
-        (eqv? value const))))
-
-  (define (in* char-set)
-    (is*
+  (define (parse:in char-set)
+    (parse:is
       (lambda (value)
         (char-set-contains? char-set value))))
 
