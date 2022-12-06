@@ -2,7 +2,7 @@ NAME=photon
 CSC=csc
 VPATH=core
 MAIN=photon.scm
-UNITS=input.o parse.o
+UNITS=stream.o
 #CSC_OPTIONS=-static
 
 # build main image
