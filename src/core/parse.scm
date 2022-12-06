@@ -18,7 +18,6 @@
 
   (import
     r5rs utf8
-    srfi-1
     srfi-2
     utf8-srfi-14
     srfi-127)
