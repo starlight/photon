@@ -1,114 +1,118 @@
 (module
   photon.stream
-  (parse:return
-    parse:fail
-    parse:identity
-    parse:bind
-    parse:any
-    parse:is
-    parse:op
-    parse:star
-    parse:plus
-    parse:seq)
+  (result%
+    stream%
+    pos%
+    return*
+    fail*
+    identity*
+    bind*
+    any*
+    null*
+    maybe*
+    seq*
+    star*
+    plus*
+    is*
+    const*
+    string*)
 
   (import
     r5rs
     utf8
     srfi-2
     srfi-9
+    utf8-srfi-13
     srfi-41)
 
-  (define-record-type :stream
-    (stream* value pos)
-    stream*?
-    (value parse:stream)
-    (pos parse:pos))
+  (define-record-type :result
+    (result% strm pos)
+    result?
+    (strm stream%)
+    (pos pos%))
 
   ; v -> i -> (v . i)
-  (define ((parse:return value) input)
-    (stream*
-      (stream-cons value (parse:stream input))
-      (parse:pos input)))
+  (define ((return* value) input)
+    (result%
+      (stream-cons value (stream% input))
+      (pos% input)))
 
   ;  -> i -> ()
-  (define ((parse:fail) input)
-    (stream* stream-null (parse:pos input)))
+  (define ((fail*) input)
+    (result%
+      stream-null
+      (pos% input)))
 
   ;  -> i -> i
-  (define ((parse:identity) input)
+  (define ((identity*) input)
     (stream-match
-      (parse:stream input)
-      (() ((parse:fail) input))
-      (ok (stream* ok (+ 1 (parse:pos input))))))
+      (stream% input)
+      (() ((fail*) input))
+      (ok (result% ok (+ 1 (pos% input))))))
 
   ; >>=
-  (define ((parse:bind parser combinator) input)
+  (define ((bind* parser combinator) input)
     (let
       ((result (parser input)))
       (stream-match
-        (parse:stream result)
+        (stream% result)
         (() result)
-        ((head . tail)
-         ((combinator head) (stream* tail (parse:pos result)))))))
+        ((value . rest)
+         ((combinator value) (result% rest (pos% result)))))))
 
   ; <|>
-  (define ((parse:any parser . parsers) input)
+  (define ((any* parser . parsers) input)
     (let
       ((result (parser input)))
       (stream-match
-        (parse:stream result)
-        (() (if (null? parsers) result
-              ((apply parse:any parsers) input)))
-        (ok result))))
+        (stream% result)
+        (() (not (null? parsers))
+            ((apply any* parsers) input))
+        (_ result))))
 
-  (define (parse:is predicate)
-    (parse:bind
-      (parse:identity)
+  ;  -> i -> (() . i)
+  (define (null*)
+    (return* '()))
+
+  (define (maybe* parser)
+    (any* parser (null*)))
+
+  (define (seq* . parsers)
+    (cond
+      ((null? parsers) (null*))
+      (else
+        (bind*
+          (car parsers)
+          (lambda (value)
+            (bind*
+              (apply seq* (cdr parsers))
+              (lambda (value')
+                (return* (cons value value')))))))))
+
+  (define (star* parser)
+    (maybe*
+      (seq* parser (star* parser))))
+
+  (define (plus* parser)
+    (seq* parser (star* parser)))
+
+  (define (is* predicate)
+    (bind*
+      (identity*)
       (lambda (value)
         (if (apply predicate value)
-          (parse:return value)
-          (parse:fail)))))
+          (return* value)
+          (fail*)))))
 
-  (define (parse:op operation value parser)
-    (parse:bind
-      parser
+  (define (const* value)
+    (is*
       (lambda (value')
-        (parse:return (operation value value')))))
+        (eqv? value value'))))
 
-  (define (parse:star parser)
-    (parse:any
-      (parse:bind
-        parser
-        (lambda (value)
-          (parse:op cons value (parse:star parser))))
-      (parse:return '())))
-
-  (define (parse:plus parser)
-    (parse:bind
-      parser
+  (define (string* strng)
+    (bind*
+      (apply seq* (string-map const* strng))
       (lambda (value)
-        (parse:op cons value (parse:star parser)))))
+        (return* strng))))
 
-  (define (parse:seq parser . parsers)
-    (parse:bind
-      parser
-      (lambda (value)
-        (if (null? parsers)
-          (parse:return value)
-          (parse:op cons value (apply parse:seq parsers))))))
-
-  (define (parse:string str)
-    (cond
-      ((= 0 (string-length str))
-       (parse:return ""))
-      (else
-        (parse:bind
-          (parse:is
-            (lambda (value)
-              (eqv? (string-ref str 0) value)))
-          (lambda (value)
-            (parse:op
-              string-append
-              (string value)
-              (parse:string (substring str 1))))))))
   )
