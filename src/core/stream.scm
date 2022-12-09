@@ -7,7 +7,7 @@
     fail*
     identity*
     bind*
-    any*
+    one-of*
     null*
     maybe*
     seq*
@@ -25,9 +25,9 @@
     utf8-srfi-13
     srfi-41)
 
-  (define-record-type :result
+  (define-record-type %result
     (result% strm pos)
-    result?
+    %result?
     (strm stream%)
     (pos pos%))
 
@@ -61,13 +61,13 @@
          ((combinator value) (result% rest (pos% result)))))))
 
   ; <|>
-  (define ((any* parser . parsers) input)
+  (define ((one-of* parser . parsers) input)
     (let
       ((result (parser input)))
       (stream-match
         (stream% result)
         (() (not (null? parsers))
-            ((apply any* parsers) input))
+            ((apply one-of* parsers) input))
         (_ result))))
 
   ;  -> i -> (() . i)
@@ -75,7 +75,7 @@
     (return* '()))
 
   (define (maybe* parser)
-    (any* parser (null*)))
+    (one-of* parser (null*)))
 
   (define (seq* . parsers)
     (cond
