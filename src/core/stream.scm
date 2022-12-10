@@ -10,19 +10,15 @@
     one-of*
     null*
     maybe*
-    seq*
-    star*
-    plus*
-    is*
-    const*
-    string*)
+    each-of*
+    zero-or-more*
+    one-or-more*
+    is*)
 
   (import
     r5rs
     utf8
-    srfi-2
     srfi-9
-    utf8-srfi-13
     srfi-41)
 
   (define-record-type %result
@@ -45,10 +41,9 @@
 
   ;  -> i -> i
   (define ((identity*) input)
-    (stream-match
+    (result%
       (stream% input)
-      (() ((fail*) input))
-      (ok (result% ok (+ 1 (pos% input))))))
+      (+ 1 (pos% input))))
 
   ; >>=
   (define ((bind* parser combinator) input)
@@ -58,7 +53,8 @@
         (stream% result)
         (() result)
         ((value . rest)
-         ((combinator value) (result% rest (pos% result)))))))
+         ((combinator value)
+          (result% rest (pos% result)))))))
 
   ; <|>
   (define ((one-of* parser . parsers) input)
@@ -77,7 +73,7 @@
   (define (maybe* parser)
     (one-of* parser (null*)))
 
-  (define (seq* . parsers)
+  (define (each-of* . parsers)
     (cond
       ((null? parsers) (null*))
       (else
@@ -85,16 +81,16 @@
           (car parsers)
           (lambda (value)
             (bind*
-              (apply seq* (cdr parsers))
+              (apply each-of* (cdr parsers))
               (lambda (value')
                 (return* (cons value value')))))))))
 
-  (define (star* parser)
+  (define (zero-or-more* parser)
     (maybe*
-      (seq* parser (star* parser))))
+      (each-of* parser (zero-or-more* parser))))
 
-  (define (plus* parser)
-    (seq* parser (star* parser)))
+  (define (one-or-more* parser)
+    (each-of* parser (zero-or-more* parser)))
 
   (define (is* predicate)
     (bind*
@@ -103,16 +99,5 @@
         (if (apply predicate value)
           (return* value)
           (fail*)))))
-
-  (define (const* value)
-    (is*
-      (lambda (value')
-        (eqv? value value'))))
-
-  (define (string* strng)
-    (bind*
-      (apply seq* (string-map const* strng))
-      (lambda (value)
-        (return* strng))))
 
   )
