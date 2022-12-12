@@ -1,118 +1,104 @@
 (module
   photon.stream
   (result%
-    stream%
-    pos%
-    return*
-    fail*
-    identity*
-    bind*
-    one-of*
-    null*
-    maybe*
-    seq*
-    star*
-    plus*
-    is*
-    const*
-    string*)
+    %result
+    %stream
+    %pos
+    *return
+    *fail
+    *identity
+    *bind
+    *one-of
+    *null
+    *maybe
+    *each-of
+    *zero-or-more
+    *one-or-more
+    *is)
 
   (import
     r5rs
     utf8
-    srfi-2
     srfi-9
-    utf8-srfi-13
     srfi-41)
 
-  (define-record-type %result
-    (result% strm pos)
+  (define-record-type result%
+    (%result strm pos)
     %result?
-    (strm stream%)
-    (pos pos%))
+    (strm %stream)
+    (pos %pos))
 
-  ; v -> i -> (v . i)
-  (define ((return* value) input)
-    (result%
-      (stream-cons value (stream% input))
-      (pos% input)))
+  ; v -> i -> v . i
+  (define ((*return value) input)
+    (%result
+      (stream-cons value (%stream input))
+      (%pos input)))
 
-  ;  -> i -> ()
-  (define ((fail*) input)
-    (result%
+  ;  -> i -> ∅
+  (define ((*fail) input)
+    (%result
       stream-null
-      (pos% input)))
+      (%pos input)))
 
   ;  -> i -> i
-  (define ((identity*) input)
-    (stream-match
-      (stream% input)
-      (() ((fail*) input))
-      (ok (result% ok (+ 1 (pos% input))))))
+  (define ((*identity) input)
+    (%result
+      (%stream input)
+      (+ 1 (%pos input))))
 
   ; >>=
-  (define ((bind* parser combinator) input)
+  (define ((*bind parser combinator) input)
     (let
       ((result (parser input)))
       (stream-match
-        (stream% result)
+        (%stream result)
         (() result)
         ((value . rest)
-         ((combinator value) (result% rest (pos% result)))))))
+         ((combinator value)
+          (%result rest (%pos result)))))))
 
   ; <|>
-  (define ((one-of* parser . parsers) input)
+  (define ((*one-of parser . parsers) input)
     (let
       ((result (parser input)))
       (stream-match
-        (stream% result)
+        (%stream result)
         (() (not (null? parsers))
-            ((apply one-of* parsers) input))
+            ((apply *one-of parsers) input))
         (_ result))))
 
-  ;  -> i -> (() . i)
-  (define (null*)
-    (return* '()))
+  ;  -> i -> ϵ . i
+  (define (*null)
+    (*return '()))
 
-  (define (maybe* parser)
-    (one-of* parser (null*)))
+  (define (*maybe parser)
+    (*one-of parser (*null)))
 
-  (define (seq* . parsers)
+  (define (*each-of . parsers)
     (cond
-      ((null? parsers) (null*))
+      ((null? parsers) (*null))
       (else
-        (bind*
+        (*bind
           (car parsers)
           (lambda (value)
-            (bind*
-              (apply seq* (cdr parsers))
+            (*bind
+              (apply *each-of (cdr parsers))
               (lambda (value')
-                (return* (cons value value')))))))))
+                (*return (cons value value')))))))))
 
-  (define (star* parser)
-    (maybe*
-      (seq* parser (star* parser))))
+  (define (*zero-or-more parser)
+    (*maybe
+      (*each-of parser (*zero-or-more parser))))
 
-  (define (plus* parser)
-    (seq* parser (star* parser)))
+  (define (*one-or-more parser)
+    (*each-of parser (*zero-or-more parser)))
 
-  (define (is* predicate)
-    (bind*
-      (identity*)
+  (define (*is predicate . args)
+    (*bind
+      (*identity)
       (lambda (value)
-        (if (apply predicate value)
-          (return* value)
-          (fail*)))))
-
-  (define (const* value)
-    (is*
-      (lambda (value')
-        (eqv? value value'))))
-
-  (define (string* strng)
-    (bind*
-      (apply seq* (string-map const* strng))
-      (lambda (value)
-        (return* strng))))
+        (if (apply predicate value args)
+          (*return value)
+          (*fail)))))
 
   )
