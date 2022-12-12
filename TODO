@@ -1,0 +1,18 @@
+* cli arguments
+  - srfi-37: args-fold
+* input stream
+  - srfi-41: streams
+  - ports: stdin, file, string...
+* parse
+  - stream -> parsers -> ast/ir
+  - monadic combinators
+* ast/ir
+  - r5rs/srfis
+* output
+  - ports: stdout, file, string...
+* repl
+  - ncurses?
+  - incomplete ast/ir
+* indirect srfi dependencies
+  - srfi-1:  lists
+  - srfi-69: hash tables
