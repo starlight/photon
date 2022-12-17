@@ -1,5 +1,6 @@
 * cli arguments
   - srfi-37: args-fold
+  - srfi-69: hash tables
 * input stream
   - srfi-41: streams
   - ports: stdin, file, string...
@@ -15,4 +16,3 @@
   - incomplete ast/ir
 * indirect srfi dependencies
   - srfi-1:  lists
-  - srfi-69: hash tables

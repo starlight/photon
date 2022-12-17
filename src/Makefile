@@ -1,24 +1,23 @@
-NAME=photon
-CSC=csc
 VPATH=core
-MAIN=photon.scm
-UNITS=stream.o parse.o
-#CSC_OPTIONS=-static
+BIN=photon
+UNITS=photon.scm context.o stream.o parse.o
+CSC=csc -r5rs-syntax
 
-# build main image
-$(NAME): $(MAIN) $(UNITS)
+# 'uses' function
+uses=$(foreach unit,$(wordlist 2,999,$(patsubst %.o,%,$(1))),-uses $(unit))
+
+# build executable
+$(BIN): $(UNITS)
 	@echo "Building '$@'"
-	$(CSC) -o $@ $(foreach unit,\
-		$(wordlist 2,999,\
-		$(patsubst %.o,%,$^)),-uses $(unit)) -r5rs-syntax $^
-
-parse.o: stream.o
+	$(CSC) $(call uses,$^) -o $@ $^
 
 # build units
+parse.o: stream.o
 %.o: %.scm
 	@echo "Building '$@'"
-	$(CSC) -o $@ -unit $* -cJ -r5rs-syntax $<
+	$(CSC) -cJ -unit $* $(call uses,$^) -o $@ $<
 
+# remove build files
 .PHONY: clean
 clean:
 	@echo "Removing build files"

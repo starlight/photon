@@ -3,7 +3,11 @@
 
   (import
     r5rs
-    photon.parse)
+    utf8
+    photon.context)
 
-  (display "photon v0.0.1-rc1")
-  (newline))
+  (let
+    ((context (init)))
+    (display (%operands context))
+    (newline))
+  )
