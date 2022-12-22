@@ -1,9 +1,15 @@
 (module
   photon.stream
-  (result%
-    %result
+  (stream%
     %stream
-    %pos
+    %stream?
+    %lseq
+    %position
+    result%
+    %result
+    %result?
+    %value
+    %input
     *return
     *fail
     *identity
@@ -19,60 +25,57 @@
   (import
     r5rs
     utf8
+    srfi-2
     srfi-9
-    srfi-41)
+    srfi-127)
+
+  (define-record-type stream%
+    (%stream lseq position)
+    %stream?
+    (lseq %lseq)
+    (position %position))
 
   (define-record-type result%
-    (%result strm pos)
+    (%result value stream)
     %result?
-    (strm %stream)
-    (pos %pos))
+    (value %value)
+    (stream %input))
 
-  ; v -> i -> v . i
+  ; 𝑣 -> 𝒊ₙ -> 𝑣 . 𝒊ₙ
   (define ((*return value) input)
-    (%result
-      (stream-cons value (%stream input))
-      (%pos input)))
+    (%result value input))
 
-  ;  -> i -> ∅
-  (define ((*fail) input)
-    (%result
-      stream-null
-      (%pos input)))
+  ;   -> 𝒊ₙ -> ∅
+  (define ((*fail) input) #f)
 
-  ;  -> i -> i
+  ;   -> 𝒊ₙ -> 𝑥ₙ . 𝒊ₙ₊
   (define ((*identity) input)
-    (%result
-      (%stream input)
-      (+ 1 (%pos input))))
+    (cond
+      ((null? (%lseq input)) #f)
+      (else
+        (%result
+          (lseq-car (%lseq input))
+          (%stream
+            (lseq-cdr (%lseq input))
+            (+ 1 (%position input)))))))
 
   ; >>=
   (define ((*bind parser combinator) input)
-    (let
+    (and-let*
       ((result (parser input)))
-      (stream-match
-        (%stream result)
-        (() result)
-        ((value . rest)
-         ((combinator value)
-          (%result rest (%pos result)))))))
+      ((combinator (%value result)) (%input result))))
 
   ; <|>
   (define ((*one-of parser . parsers) input)
     (let
       ((result (parser input)))
-      (stream-match
-        (%stream result)
-        (() (not (null? parsers))
-            ((apply *one-of parsers) input))
-        (_ result))))
+      (cond
+        ((or result (null? parsers)) result)
+        (else
+          ((apply *one-of parsers) input)))))
 
-  ;  -> i -> ϵ . i
   (define (*null)
     (*return '()))
-
-  (define (*maybe parser)
-    (*one-of parser (*null)))
 
   (define (*each-of . parsers)
     (cond
@@ -86,12 +89,15 @@
               (lambda (value')
                 (*return (cons value value')))))))))
 
-  (define (*zero-or-more parser)
-    (*maybe
-      (*each-of parser (*zero-or-more parser))))
+  (define (*maybe parser)
+    (*one-of parser (*null)))
 
   (define (*one-or-more parser)
     (*each-of parser (*zero-or-more parser)))
+
+  (define (*zero-or-more parser)
+    (*maybe
+      (*one-or-more parser)))
 
   (define (*is predicate . args)
     (*bind
@@ -101,4 +107,4 @@
           (*return value)
           (*fail)))))
 
-  )
+)

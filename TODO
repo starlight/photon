@@ -2,7 +2,7 @@
   - srfi-37: args-fold
   - srfi-69: hash tables
 * input stream
-  - srfi-41: streams
+  - srfi-158: generators/accumulators
   - ports: stdin, file, string...
 * parse
   - stream -> parsers -> ast/ir

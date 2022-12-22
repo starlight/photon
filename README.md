@@ -12,8 +12,11 @@
   * srfi-23
 * Chicken Eggs
   * utf8
+  * srfi-13
+  * srfi-14
   * srfi-37
-  * srfi-41
+  * srfi-158
+  * srfi-127
 
 ## build
 
